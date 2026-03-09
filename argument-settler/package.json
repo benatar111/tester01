@@ -1,0 +1,17 @@
+{
+  "name": "argument-settler",
+  "version": "1.0.0",
+  "description": "Two AI personas debate any topic while a judge scores and declares a winner",
+  "main": "index.js",
+  "bin": {
+    "settle-it": "./index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "debate": "node index.js"
+  },
+  "keywords": ["debate", "argument", "cli", "fun"],
+  "license": "MIT",
+  "dependencies": {}
+}
