@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Game Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f0;
+    color: #2d2d2d;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  h1.page-title {
+    text-align: center;
+    color: #2e7d32;
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Overall Progress ───────────────────────────────────── */
+  .overall-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+
+  .overall-header {
+    background: #4caf50;
+    color: #fff;
+    font-weight: 700;
+    font-size: .95rem;
+    padding: 6px 14px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+
+  .overall-body {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* bar chart */
+  .bar-chart {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .bar-chart-grid {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100px;
+    border-left: 2px solid #ccc;
+    border-bottom: 2px solid #ccc;
+    padding: 4px 4px 0;
+    position: relative;
+  }
+
+  .bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    background: #4caf50;
+    border-radius: 3px 3px 0 0;
+    transition: height .4s ease;
+    min-height: 2px;
+  }
+
+  .bar.light { background: #c8e6c9; }
+
+  .bar-label {
+    font-size: .65rem;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .chart-y-labels {
+    position: absolute;
+    left: -24px;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .chart-y-labels span { font-size: .6rem; color: #888; }
+
+  /* donut */
+  .donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .donut-wrap .count-text {
+    font-size: .75rem;
+    color: #555;
+  }
+
+  /* ── Week Grid ──────────────────────────────────────────── */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .day-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  }
+
+  .day-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .day-name {
+    background: #4caf50;
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .day-date {
+    font-size: .7rem;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .day-card-body {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .task-list {
+    flex: 1;
+  }
+
+  .task-list h4 {
+    font-size: .72rem;
+    color: #4caf50;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .task-item input[type=checkbox] {
+    accent-color: #4caf50;
+    margin-top: 2px;
+    cursor: pointer;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+
+  .task-item label {
+    font-size: .72rem;
+    color: #444;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+
+  .task-item input:checked + label {
+    text-decoration: line-through;
+    color: #aaa;
+  }
+
+  /* ── Habit Tracker ──────────────────────────────────────── */
+  .habit-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    overflow-x: auto;
+  }
+
+  .habit-header {
+    background: #4caf50;
+    color: #fff;
+    font-weight: 700;
+    font-size: .95rem;
+    padding: 6px 14px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+
+  .habit-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 500px;
+  }
+
+  .habit-table th {
+    background: #4caf50;
+    color: #fff;
+    font-size: .72rem;
+    padding: 5px 8px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .habit-table th.habit-name-col {
+    text-align: left;
+    min-width: 160px;
+    border-radius: 6px 0 0 0;
+  }
+
+  .habit-table td {
+    padding: 5px 8px;
+    font-size: .75rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .habit-table tr:last-child td { border-bottom: none; }
+
+  .habit-table td.habit-name {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .habit-table td.check-cell {
+    text-align: center;
+  }
+
+  .habit-table input[type=checkbox] {
+    accent-color: #4caf50;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+  }
+
+  .habit-table tr:nth-child(even) { background: #f9fdf9; }
+
+  .habit-streak {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .streak-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c8e6c9;
+  }
+
+  .streak-dot.active { background: #4caf50; }
+
+  /* ── SVG Donut ──────────────────────────────────────────── */
+  .donut-svg { transform: rotate(-90deg); }
+
+  .donut-bg { fill: none; stroke: #e0e0e0; stroke-width: 8; }
+  .donut-fg { fill: none; stroke: #4caf50; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+
+  .donut-container {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+  }
+
+  .donut-container.large {
+    width: 96px;
+    height: 96px;
+  }
+
+  .donut-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .85rem;
+    color: #2e7d32;
+  }
+
+  .donut-container.large .donut-label {
+    font-size: 1.1rem;
+  }
+
+  /* ── Responsive tweaks ──────────────────────────────────── */
+  @media (max-width: 480px) {
+    .week-grid { grid-template-columns: 1fr 1fr; }
+    .overall-body { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">🎮 Life Game Dashboard</h1>
+
+<!-- ── Overall Progress ── -->
+<div class="overall-card">
+  <div class="overall-header">Overall Progress</div>
+  <div class="overall-body">
+    <div class="bar-chart">
+      <div class="bar-chart-grid" id="barChart"></div>
+      <div style="display:flex;justify-content:space-around;margin-top:2px;" id="barLabels"></div>
+    </div>
+    <div class="donut-wrap">
+      <div class="donut-container large" id="overallDonut">
+        <svg class="donut-svg" width="96" height="96" viewBox="0 0 96 96">
+          <circle class="donut-bg" cx="48" cy="48" r="40"/>
+          <circle class="donut-fg" id="overallArc" cx="48" cy="48" r="40"
+            stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+        </svg>
+        <div class="donut-label" id="overallPct">0%</div>
+      </div>
+      <div class="count-text" id="overallCount">0 / 0 Completed</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Week Grid ── -->
+<div class="week-grid" id="weekGrid"></div>
+
+<!-- ── Habit Tracker ── -->
+<div class="habit-card">
+  <div class="habit-header">Habit Tracker</div>
+  <table class="habit-table" id="habitTable">
+    <thead>
+      <tr>
+        <th class="habit-name-col">Habit</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const WEEK_START = new Date('2025-11-02'); // Sunday
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHORT_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+const DAY_TASKS = [
+  // Sunday
+  ['Organize personal finances','Write 10 content ideas','Prepare commercial proposal','Review subscriptions','Organize the workspace','Renew gym membership'],
+  // Monday
+  ['Analyze the marketing report','Finish the project update','Set up work-development plan','Pay the bills','Grocery shopping','Pay the gym'],
+  // Tuesday
+  ['Hire a personal trainer','Buy groceries for the week','Deep clean the apartment',"Doctor's appointment"],
+  // Wednesday
+  ['Film content for the new project','Water the plants','Meet up with friends','Redesign the website','Grocery shopping'],
+  // Thursday
+  ['Check email','Reply to urgent matters','Review financial report','Team meeting','Review expenses and payments','Check sales metrics'],
+  // Friday
+  ['Post about the company on social','Update the team\'s task list','Order cleaning services','Review tax docs','Check email'],
+  // Saturday
+  ['Make edits to the commercial proposal','Approve the canvas work file','Study music production','Research new tools','Pay top-up subscriptions'],
+];
+
+const HABITS = [
+  'Wake up at 06:00',
+  'No alcohol',
+  'Cold shower',
+  '1 hour on social media',
+  'Budget tracking',
+  'Gym',
+  'Reading',
+  'English',
+];
+
+// ── STATE ────────────────────────────────────────────────────
+const state = {
+  tasks: DAY_TASKS.map(list => list.map(() => false)),
+  habits: HABITS.map(() => SHORT_DAYS.map(() => false)),
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('lifeGameState');
+    if (saved) Object.assign(state, JSON.parse(saved));
+  } catch(_) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('lifeGameState', JSON.stringify(state)); } catch(_) {}
+}
+
+// ── DONUT ────────────────────────────────────────────────────
+function makeDonut(id, size, pct) {
+  const r = size === 'large' ? 40 : 28;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
+  const dim = size === 'large' ? 96 : 72;
+  return `
+    <div class="donut-container${size === 'large' ? ' large' : ''}" id="${id}">
+      <svg class="donut-svg" width="${dim}" height="${dim}" viewBox="0 0 ${dim} ${dim}">
+        <circle class="donut-bg" cx="${dim/2}" cy="${dim/2}" r="${r}"/>
+        <circle class="donut-fg" id="${id}-arc" cx="${dim/2}" cy="${dim/2}" r="${r}"
+          stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
+      </svg>
+      <div class="donut-label" id="${id}-lbl">${Math.round(pct)}%</div>
+    </div>`;
+}
+
+function updateDonut(id, pct, size) {
+  const r = size === 'large' ? 40 : 28;
+  const circ = 2 * Math.PI * r;
+  const arc = document.getElementById(id + '-arc');
+  const lbl = document.getElementById(id + '-lbl');
+  if (arc) arc.style.strokeDashoffset = (circ * (1 - pct / 100)).toFixed(1);
+  if (lbl) lbl.textContent = Math.round(pct) + '%';
+}
+
+// ── BUILD WEEK GRID ──────────────────────────────────────────
+function buildWeekGrid() {
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+  DAYS.forEach((day, di) => {
+    const date = new Date(WEEK_START);
+    date.setDate(date.getDate() + di);
+    const dateStr = date.toLocaleDateString('en-GB').replace(/\//g,'.').split('.').reverse().join('.');
+    const tasks = DAY_TASKS[di];
+    const pct = 0;
+
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.innerHTML = `
+      <div class="day-card-header">
+        <div>
+          <div class="day-name">${day}</div>
+          <div class="day-date">${date.toLocaleDateString('en-GB')}</div>
+        </div>
+        ${makeDonut('day-' + di, 'small', pct)}
+      </div>
+      <div class="day-card-body">
+        <div class="task-list">
+          <h4>Tasks</h4>
+          ${tasks.map((t, ti) => `
+            <div class="task-item">
+              <input type="checkbox" id="t-${di}-${ti}" ${state.tasks[di][ti] ? 'checked' : ''}
+                onchange="toggleTask(${di},${ti},this.checked)">
+              <label for="t-${di}-${ti}">${t}</label>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ── BUILD HABIT TABLE ────────────────────────────────────────
+function buildHabitTable() {
+  const table = document.getElementById('habitTable');
+  const thead = table.querySelector('thead tr');
+  SHORT_DAYS.forEach(d => {
+    const th = document.createElement('th');
+    th.textContent = d;
+    thead.appendChild(th);
+  });
+
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+  HABITS.forEach((habit, hi) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="habit-name">${habit}</td>` +
+      SHORT_DAYS.map((_, di) => `
+        <td class="check-cell">
+          <input type="checkbox" id="h-${hi}-${di}" ${state.habits[hi][di] ? 'checked' : ''}
+            onchange="toggleHabit(${hi},${di},this.checked)">
+        </td>`).join('');
+    tbody.appendChild(tr);
+  });
+}
+
+// ── BUILD BAR CHART ──────────────────────────────────────────
+function buildBarChart() {
+  const chart = document.getElementById('barChart');
+  const labels = document.getElementById('barLabels');
+  chart.innerHTML = '';
+  labels.innerHTML = '';
+
+  const maxTasks = Math.max(...DAY_TASKS.map(t => t.length));
+
+  SHORT_DAYS.forEach((d, di) => {
+    const done = state.tasks[di].filter(Boolean).length;
+    const total = DAY_TASKS[di].length;
+    const heightPct = total > 0 ? (done / maxTasks) * 100 : 0;
+    const totalHeightPct = (total / maxTasks) * 100;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrap';
+    wrap.id = 'bar-wrap-' + di;
+
+    // stacked: completed (green) + remaining (light)
+    wrap.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;width:100%;height:100%;justify-content:flex-end;">
+        <div class="bar" id="bar-done-${di}" style="height:${heightPct}%;width:80%;background:#4caf50;border-radius:3px 3px 0 0;position:relative;bottom:0;"></div>
+        <div class="bar light" id="bar-rem-${di}" style="height:${totalHeightPct - heightPct}%;width:80%;background:#c8e6c9;margin-bottom:0;border-radius:${done===0?'3px 3px 0 0':'0'};"></div>
+      </div>`;
+
+    // actually simpler: one bar for completed
+    wrap.innerHTML = `
+      <div style="width:80%;height:${totalHeightPct}%;display:flex;flex-direction:column;justify-content:flex-end;border-radius:3px 3px 0 0;overflow:hidden;background:#c8e6c9;" id="bar-bg-${di}">
+        <div style="height:${total>0?(done/total)*100:0}%;background:#4caf50;transition:height .4s ease;" id="bar-fg-${di}"></div>
+      </div>`;
+
+    chart.appendChild(wrap);
+
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'flex:1;text-align:center;font-size:.62rem;color:#888;';
+    lbl.textContent = d;
+    labels.appendChild(lbl);
+  });
+}
+
+// ── UPDATE ────────────────────────────────────────────────────
+function recalc() {
+  let totalDone = 0, totalAll = 0;
+  DAYS.forEach((_, di) => {
+    const done = state.tasks[di].filter(Boolean).length;
+    const total = DAY_TASKS[di].length;
+    totalDone += done;
+    totalAll += total;
+    const pct = total > 0 ? (done / total) * 100 : 0;
+    updateDonut('day-' + di, pct, 'small');
+
+    // bar
+    const bg = document.getElementById('bar-bg-' + di);
+    const fg = document.getElementById('bar-fg-' + di);
+    if (fg && total > 0) fg.style.height = ((done / total) * 100) + '%';
+  });
+
+  const overallPct = totalAll > 0 ? (totalDone / totalAll) * 100 : 0;
+  updateDonut('overall', overallPct, 'large');
+  document.getElementById('overallCount').textContent = `${totalDone} / ${totalAll} Completed`;
+}
+
+function toggleTask(di, ti, val) {
+  state.tasks[di][ti] = val;
+  saveState();
+  recalc();
+}
+
+function toggleHabit(hi, di, val) {
+  state.habits[hi][di] = val;
+  saveState();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+loadState();
+buildWeekGrid();
+buildHabitTable();
+buildBarChart();
+
+// overall donut init
+const overallArc = document.getElementById('overallArc');
+if (overallArc) {
+  const circ = 2 * Math.PI * 40;
+  overallArc.setAttribute('stroke-dasharray', circ.toFixed(1));
+  overallArc.setAttribute('stroke-dashoffset', circ.toFixed(1));
+}
+
+recalc();
+</script>
+</body>
+</html>
